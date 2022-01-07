@@ -1,0 +1,115 @@
+---
+layout: page
+title: Rentenanpassungsbetrag berechnen
+---
+<html>
+	<head>
+		<title>Rentenanpassungsbetrag berechnen</title>
+		<script>
+			var rentenWerte;
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					rentenWerte = JSON.parse(this.responseText);
+				}
+			};
+			xmlhttp.open("GET", "https://kmpoppe.github.io/rentenanpassungsbetrag/rentenwerte.json", true);
+			xmlhttp.send();
+		</script>
+	</head>
+	<body>
+		<h1>Rentenanpassungsbetrag berechnen</h1>
+		<p>Diese Seite berechnet den Rentenanpassungsbetrag, der in der Einkommensteuererklärung für Empfänger einer Rente der deutschen Rentenversicherung angegeben werden muss.</p>
+		<p>Die berechneten Werte stellen keine rechtlich bindende Information der Deutschen Rentenversicherung dar und dürfen nur als Orientierungshilfen angesehen werden.</p>
+		<form id="formular">
+			<table>
+				<tr>
+					<td>Rentenbeginn:</td>
+					<td><input type="date" name="beginnDatum" id="beginnDatum"/></td>
+				</tr>
+				<tr>
+					<td>Rentenpunkte:</td>
+					<td><input type="text" name="rentenPunkte" id="rentenPunkte"/></td>
+				</tr>
+				<tr>
+					<td>Steuerjahr:</td>
+					<td><input type="text" name="steuerJahr" id="steuerJahr" /></td>
+				</tr>
+				<tr>
+					<td>Rentenbezugsort:</td>
+					<td><input type="radio" name="rentenOrt" value="ost"/> Ost <input type="radio" name="rentenOrt" value="west"/> West</td>
+				</tr>
+			</table>
+			<input type="button" onClick="calc();" value="Berechnen"/>
+		</form>
+		<p>Ergebnisse:</p>
+		<table>
+			<tr>
+				<td>[1] Brutto Rente im ersten vollen Jahr:</td>
+				<td><span id="bruttoRente1"/></td>
+			</tr>
+			<tr>
+				<td>[2] Brutto Rente im Steuerjahr:</td>
+				<td><span id="bruttoRente2"/></td>
+			</tr>
+			<tr>
+				<td>[3] Rentenanpassungsbetrag ([2] - [1]):</td>
+				<td><span id="rentenanpassungsbetrag"/></td>
+			</tr>
+			<tr>
+				<td>[4] Steuerfreier Teil der Rente:</td>
+				<td><span id="steuerfreieRente"/></td>
+			</tr>
+		</table>
+	</body>
+	<script>
+		// Berechnung für vergangenes Jahr
+		var calcYear = (new Date().getFullYear())-1;
+		document.getElementById("steuerJahr").value = calcYear;
+		
+		// Beispiel Rentenpunkte zwischen 40 und 50
+		var demoPunkte = Math.round(Math.random() * 10000) / 10000 + Math.round(Math.random() * 10) + 40;
+		document.getElementById("rentenPunkte").value = demoPunkte;
+		
+		// Rentenbeginn zwischen 2012 und 2019
+		var demoDate = randomDate(new Date(2012, 0, 1), new Date(2019, 11, 1));	
+		alert(demoDate.toLocaleDateString());
+		document.getElementById("beginnDatum").value = demoDate.toISOString().substring(0,10);
+		
+		function calc() {
+			let felder = document.getElementById("formular").elements;
+			let erstesJahr = (new Date(felder["beginnDatum"].value)).getFullYear() + 1;
+			let steuerJahr = felder["steuerJahr"].value;
+			let rentenPkte = felder["rentenPunkte"].value;
+			let rentenOrt  = felder["rentenOrt"].value;
+			
+			if (rentenOrt == "") {
+				alert("Rentenbezugsort muss angegeben werden!");
+			} else {
+				var erstesJahrErsteHaelfte = rentenWerte["rentenwerte"][rentenOrt][erstesJahr][1];
+				var erstesJahrZweitHaelfte = rentenWerte["rentenwerte"][rentenOrt][erstesJahr][2];
+				var steuerJahrErsteHaelfte = rentenWerte["rentenwerte"][rentenOrt][steuerJahr][1];
+				var steuerJahrZweitHaelfte = rentenWerte["rentenwerte"][rentenOrt][steuerJahr][2];
+
+				var bruttoErstesJahr =
+					  Math.round(erstesJahrErsteHaelfte * rentenPkte * 6 * 100) / 100
+					+ Math.round(erstesJahrZweitHaelfte * rentenPkte * 6 * 100) / 100;
+				var bruttoSteuerJahr =
+					  Math.round(steuerJahrErsteHaelfte * rentenPkte * 6 * 100) / 100
+					+ Math.round(steuerJahrZweitHaelfte * rentenPkte * 6 * 100) / 100;
+
+				document.getElementById("bruttoRente1").innerHTML = bruttoErstesJahr + " &euro;";
+				document.getElementById("bruttoRente2").innerHTML = bruttoSteuerJahr + " &euro;";
+				document.getElementById("rentenanpassungsbetrag").innerHTML = Math.round((bruttoSteuerJahr - bruttoErstesJahr) * 100) / 100 + " &euro;";
+
+				let besteuerungsAnteil = (Math.max(0, erstesJahr - 2020) * 1) + ((erstesJahr - 2005) - 1) * 2 + 50;
+				let steuerfreieRente = Math.round(((1 - (besteuerungsAnteil / 100)) * bruttoErstesJahr) * 100)  / 100;
+				document.getElementById("steuerfreieRente").innerHTML = steuerfreieRente + " &euro;";
+			}
+		}
+		function randomDate(start, end) {
+			return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+		}
+	</script>
+</html>
+
