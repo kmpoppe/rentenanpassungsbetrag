@@ -1,6 +1,7 @@
 ---
 layout: default
-title: Rentenanpassungsbetrag berechnen
+title: "Rentenanpassungsbetrag berechnen"
+description: "Berechnung des Rentenanpassungsbetrags für die Einkommensteuererklärung"
 ---
 <html>
 	<head>
@@ -18,7 +19,6 @@ title: Rentenanpassungsbetrag berechnen
 		</script>
 	</head>
 	<body>
-		<h1>Rentenanpassungsbetrag berechnen</h1>
 		<p>Diese Seite berechnet den Rentenanpassungsbetrag, der in der Einkommensteuererklärung für Empfänger einer Rente der deutschen Rentenversicherung angegeben werden muss.</p>
 		<p>Die berechneten Werte stellen keine rechtlich bindende Information der Deutschen Rentenversicherung dar und dürfen nur als Orientierungshilfen angesehen werden.</p>
 		<form id="formular">
@@ -73,7 +73,6 @@ title: Rentenanpassungsbetrag berechnen
 		
 		// Rentenbeginn zwischen 2012 und 2019
 		var demoDate = randomDate(new Date(2012, 0, 1), new Date(2019, 11, 1));	
-		alert(demoDate.toLocaleDateString());
 		document.getElementById("beginnDatum").value = demoDate.toISOString().substring(0,10);
 		
 		function calc() {
